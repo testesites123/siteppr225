@@ -203,8 +203,7 @@ export default function BolaoPPR2025() {
             Painel Admin
           </h2>
           {!isAdmin ? (
-            <>
-              <p className="mb-2 text-center">Insira a senha para acessar o painel:</p>
+            <div>
               <input
                 type="password"
                 value={adminPass}
@@ -213,29 +212,28 @@ export default function BolaoPPR2025() {
                 className="w-full p-3 border border-gray-600 rounded-lg mb-4 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
               />
               <button
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
                 onClick={handleAdminLogin}
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
               >
                 Entrar
               </button>
-            </>
+            </div>
           ) : (
-            <>
+            <div>
               <input
                 type="number"
-                step="0.01"
                 value={pprOficial}
                 onChange={(e) => setPprOficial(e.target.value)}
                 placeholder="PPR Oficial"
                 className="w-full p-3 border border-gray-600 rounded-lg mb-4 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
               />
               <button
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
                 onClick={handleCalcularResultado}
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
               >
                 Calcular Resultado
               </button>
-            </>
+            </div>
           )}
         </section>
       </main>
