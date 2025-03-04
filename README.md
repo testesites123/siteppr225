@@ -1,0 +1,244 @@
+import { useState, useEffect } from "react";
+
+/** Gera apostas falsas para simular vários participantes */
+function gerarApostasFalsas(qtd) {
+  const nomesFalsos = [
+    "Ana", "Bruno", "Carla", "Diego", "Elisa",
+    "Fernando", "Gabriela", "Hugo", "Iara", "Jonas",
+    "Karen", "Leonardo", "Marina", "Natália", "Otávio",
+    "Paula", "Renan", "Sofia", "Thiago", "Viviane"
+  ];
+
+  const apostasFalsas = [];
+  for (let i = 0; i < qtd; i++) {
+    const nomeAleatorio =
+      nomesFalsos[Math.floor(Math.random() * nomesFalsos.length)] +
+      // Adiciona um número ao final do nome aleatoriamente, só pra variar
+      (Math.random() < 0.2 ? Math.floor(Math.random() * 100) : "");
+
+    const palpiteAleatorio = (Math.random() * 3).toFixed(2);
+
+    apostasFalsas.push({
+      nome: nomeAleatorio,
+      palpite: palpiteAleatorio,
+      data: new Date().toLocaleString()
+    });
+  }
+  return apostasFalsas;
+}
+
+export default function BolaoPPR2025() {
+  const [apostas, setApostas] = useState([]);
+  const [nome, setNome] = useState("");
+  const [palpite, setPalpite] = useState("");
+  const [pprOficial, setPprOficial] = useState("");
+
+  // Estado para controlar o acesso ao Painel Admin
+  const [adminPass, setAdminPass] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Carrega apostas do localStorage (se existirem)
+    const storedApostas = JSON.parse(localStorage.getItem("apostas")) || [];
+
+    if (storedApostas.length === 0) {
+      // Se não houver apostas salvas, cria algumas apostas falsas iniciais
+      const fakeApostas = gerarApostasFalsas(10);
+      setApostas(fakeApostas);
+      localStorage.setItem("apostas", JSON.stringify(fakeApostas));
+    } else {
+      setApostas(storedApostas);
+    }
+  }, []);
+
+  // Efeito para gerar uma nova aposta a cada 5 segundos, simulando movimento
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const novaApostaFake = gerarApostasFalsas(1)[0];
+      setApostas((prev) => {
+        const atualizadas = [...prev, novaApostaFake];
+        localStorage.setItem("apostas", JSON.stringify(atualizadas));
+        return atualizadas;
+      });
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  /** Função para adicionar uma nova aposta (usuário real) */
+  const handleApostar = () => {
+    if (!nome || isNaN(parseFloat(palpite)) || palpite < 0 || palpite > 3) {
+      alert("Nome único e palpite entre 0,00 e 3,00 são obrigatórios.");
+      return;
+    }
+    // Verifica se o nome já foi usado (ignora maiúsculas/minúsculas)
+    if (apostas.some((a) => a.nome.toLowerCase() === nome.toLowerCase())) {
+      alert("Nome já cadastrado.");
+      return;
+    }
+
+    const novaAposta = {
+      nome,
+      palpite: parseFloat(palpite).toFixed(2),
+      data: new Date().toLocaleString()
+    };
+
+    setApostas((prev) => {
+      const atualizadas = [...prev, novaAposta];
+      localStorage.setItem("apostas", JSON.stringify(atualizadas));
+      return atualizadas;
+    });
+
+    // Limpa o formulário
+    setNome("");
+    setPalpite("");
+  };
+
+  /** Verifica quem chegou mais perto do PPR oficial */
+  const calcularVencedores = () => {
+    if (!pprOficial || isNaN(parseFloat(pprOficial))) {
+      alert("Insira o valor oficial do PPR.");
+      return [];
+    }
+    const valor = parseFloat(pprOficial);
+    return apostas
+      .map((a) => ({ ...a, diferenca: Math.abs(a.palpite - valor) }))
+      .sort((a, b) => a.diferenca - b.diferenca)
+      .slice(0, 3);
+  };
+
+  /** Exibe um alerta com o top 3 vencedores (para teste) */
+  const handleCalcularResultado = () => {
+    const top3 = calcularVencedores();
+    if (top3.length > 0) {
+      alert(JSON.stringify(top3, null, 2));
+    }
+  };
+
+  /** Lida com a entrada de senha do admin */
+  const handleAdminLogin = () => {
+    if (adminPass === "segredo123") {
+      setIsAdmin(true);
+    } else {
+      alert("Senha incorreta!");
+    }
+  };
+
+  return (
+    <div
+      className="min-h-screen text-white"
+      style={{
+        background: "linear-gradient(135deg, #0b1729 0%, #785100 100%)" // Gradiente: azul-escuro e dourado
+      }}
+    >
+      {/* Header com o logo fornecido */}
+      <header className="flex items-center justify-center h-52">
+        <img
+          src="https://ideogram.ai/assets/progressive-image/balanced/response/-3DgKQxZTUqsypPi7Io6bg"
+          alt="Logo Bolão PPR 2025"
+          className="h-full object-contain"
+        />
+      </header>
+
+      <main className="container mx-auto p-4">
+        {/* Seção de apostar */}
+        <section className="mb-8">
+          <div className="max-w-md mx-auto bg-black bg-opacity-40 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold mb-4 text-center text-yellow-300">
+              Faça sua aposta
+            </h2>
+            <input
+              type="text"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              placeholder="Nome (único)"
+              className="w-full p-3 border border-gray-600 rounded-lg mb-4 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+            />
+            <input
+              type="number"
+              step="0.01"
+              value={palpite}
+              onChange={(e) => setPalpite(e.target.value)}
+              placeholder="Palpite (0,00 a 3,00)"
+              className="w-full p-3 border border-gray-600 rounded-lg mb-4 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+            />
+            <button
+              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
+              onClick={handleApostar}
+            >
+              Apostar
+            </button>
+          </div>
+        </section>
+
+        {/* Seção de listagem das apostas */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-center text-yellow-300">
+            Apostas Recentes
+          </h2>
+          <ul className="space-y-3 max-w-md mx-auto">
+            {apostas.map((a, index) => (
+              <li
+                key={index}
+                className="bg-black bg-opacity-30 p-4 rounded-lg shadow hover:shadow-lg transition-shadow duration-200"
+              >
+                <span className="font-bold">{a.nome}</span> —{" "}
+                {/* Valor “borrado” (blur) até passar o mouse */}
+                <span className="blur-sm hover:blur-none">
+                  R$ {a.palpite}
+                </span>
+                <br />
+                <span className="text-sm text-gray-300">{a.data}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="text-center mt-4 font-bold text-yellow-300">
+            Total de apostas: {apostas.length}
+          </div>
+        </section>
+
+        {/* Painel Admin (proteção por senha) */}
+        <section className="max-w-md mx-auto bg-black bg-opacity-40 rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4 text-center text-yellow-300">
+            Painel Admin
+          </h2>
+          {!isAdmin ? (
+            <>
+              <p className="mb-2 text-center">Insira a senha para acessar o painel:</p>
+              <input
+                type="password"
+                value={adminPass}
+                onChange={(e) => setAdminPass(e.target.value)}
+                placeholder="Senha Admin"
+                className="w-full p-3 border border-gray-600 rounded-lg mb-4 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+              />
+              <button
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
+                onClick={handleAdminLogin}
+              >
+                Entrar
+              </button>
+            </>
+          ) : (
+            <>
+              <input
+                type="number"
+                step="0.01"
+                value={pprOficial}
+                onChange={(e) => setPprOficial(e.target.value)}
+                placeholder="PPR Oficial"
+                className="w-full p-3 border border-gray-600 rounded-lg mb-4 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+              />
+              <button
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded transition duration-200"
+                onClick={handleCalcularResultado}
+              >
+                Calcular Resultado
+              </button>
+            </>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
